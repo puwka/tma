@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
   Send,
-  MessageCircle,
   Loader2,
   Mic,
   MicOff,

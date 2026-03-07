@@ -12,7 +12,7 @@ const tabs: { id: TabId; path: string; label: string; icon: typeof Home }[] = [
 export function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { activeTab, setActiveTab } = useStore()
+  const { setActiveTab } = useStore()
 
   const handleTabClick = (tab: TabId, path: string) => {
     setActiveTab(tab)

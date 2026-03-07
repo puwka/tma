@@ -61,7 +61,7 @@ function useVoiceInput(onResult: (text: string) => void) {
 }
 
 export function Slovoed() {
-  const { balance, userAvatar, userName, useSlovoedCharge, slovoedFreeRemaining } = useStore()
+  const { balance, useSlovoedCharge, slovoedFreeRemaining } = useStore()
   const freeRemaining = slovoedFreeRemaining()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)

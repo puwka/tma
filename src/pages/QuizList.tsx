@@ -36,11 +36,6 @@ export function QuizList() {
     navigate(`/quiz/${id}`)
   }
 
-  const getQuizLink = (quizId: string) => {
-    const base = typeof window !== 'undefined' ? window.location.origin : ''
-    return `${base}/q/${quizId}`
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800 pb-24">
       <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-100">

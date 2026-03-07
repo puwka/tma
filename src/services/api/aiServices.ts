@@ -30,7 +30,7 @@ export async function generateText(prompt: string): Promise<GenerateTextResult> 
 }
 
 /** Транскрибация аудио */
-export async function transcribeAudio(audioUrl: string): Promise<TranscribeResult> {
+export async function transcribeAudio(_audioUrl: string): Promise<TranscribeResult> {
   await delay(1000)
   return {
     text: '[Заглушка] Транскрипция аудио готова.',
@@ -39,7 +39,7 @@ export async function transcribeAudio(audioUrl: string): Promise<TranscribeResul
 }
 
 /** Генерация изображения */
-export async function generateImage(prompt: string): Promise<GenerateImageResult> {
+export async function generateImage(_prompt: string): Promise<GenerateImageResult> {
   await delay(1000)
   return {
     url: 'https://placehold.co/512x512',
