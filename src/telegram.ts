@@ -16,6 +16,14 @@ export function initTelegramWebApp() {
   }
 }
 
+export function getTelegramUserId(): string | null {
+  try {
+    return WebApp.initDataUnsafe?.user?.id?.toString() ?? null
+  } catch {
+    return null
+  }
+}
+
 export function getTelegramUser(): { name: string; avatar?: string } | null {
   try {
     const user = WebApp.initDataUnsafe?.user

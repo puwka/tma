@@ -28,6 +28,17 @@ export interface UserState {
   setGenerations: (n: number) => void
   setEarned: (n: number) => void
   setActiveTab: (tab: TabId) => void
+  /** Применить данные профиля из БД (без отправки обратно в Supabase). */
+  setProfileFromDb: (profile: {
+    balance: number
+    user_name: string
+    avatar_url?: string | null
+    subscription_status?: string
+    generations?: number
+    earned?: number
+    slovoed_free_used_today?: number
+    slovoed_last_date?: string | null
+  }) => void
   /** Списывает один запуск Словоеда (бесплатный или 5 нейронов). Возвращает true если списание прошло. */
   useSlovoedCharge: () => boolean
   /** Сколько бесплатных попыток Словоеда осталось сегодня (0–3). */
@@ -54,6 +65,18 @@ export const useStore = create<UserState>()(
       setGenerations: (generations) => set({ generations }),
       setEarned: (earned) => set({ earned }),
       setActiveTab: (activeTab) => set({ activeTab }),
+
+      setProfileFromDb: (profile) =>
+        set({
+          balance: profile.balance,
+          userName: profile.user_name || 'Пользователь',
+          userAvatar: profile.avatar_url ?? undefined,
+          subscriptionStatus: profile.subscription_status ?? 'Бесплатный',
+          generations: profile.generations ?? 0,
+          earned: profile.earned ?? 0,
+          slovoedFreeUsedToday: profile.slovoed_free_used_today ?? 0,
+          slovoedLastDate: profile.slovoed_last_date ?? '',
+        }),
 
       useSlovoedCharge: () => {
         const state = get()
