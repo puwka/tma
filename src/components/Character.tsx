@@ -14,7 +14,7 @@ export function Character({ imageUrl, accentColor = '#6366f1', name, className =
   if (imageUrl) {
     return (
       <motion.div
-        className={`relative overflow-hidden rounded-3xl bg-slate-100 ${className}`}
+        className={`relative overflow-hidden rounded-3xl bg-white/90 shadow-md ring-1 ring-slate-200/80 ${className}`}
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35 }}
@@ -28,17 +28,17 @@ export function Character({ imageUrl, accentColor = '#6366f1', name, className =
     )
   }
 
-  // Мягкий градиент фона под персонажа
-  const lightAccent = accentColor + '18'
+  // Яркий контрастный фон под робота: градиент + рамка
+  const lightAccent = accentColor + '22'
 
   return (
     <motion.div
-      className={`relative flex items-center justify-center rounded-3xl overflow-hidden ${className}`}
+      className={`relative flex items-center justify-center rounded-3xl overflow-hidden shadow-lg ring-1 ring-black/5 ${className}`}
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35 }}
       style={{
-        background: `linear-gradient(165deg, ${lightAccent} 0%, rgba(248,250,252,0.95) 50%, rgba(241,245,249,0.98) 100%)`,
+        background: `linear-gradient(165deg, ${lightAccent} 0%, rgba(255,255,255,0.98) 35%, rgba(248,250,252,0.99) 70%, rgba(241,245,249,1) 100%)`,
       }}
     >
       <svg

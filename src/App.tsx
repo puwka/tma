@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { Layout } from './components/Layout'
 import { Home } from './pages/Home'
 import { Shop } from './pages/Shop'
@@ -10,14 +11,20 @@ import { Slovoed } from './pages/Slovoed'
 import { QuizList } from './pages/QuizList'
 import { QuizEditor } from './pages/QuizEditor'
 import { QuizPlay } from './pages/QuizPlay'
+import { LoadingScreen } from './components/LoadingScreen'
+import { Onboarding, getOnboardingDone } from './components/Onboarding'
 import { useStore } from './store/useStore'
 import { initTelegramWebApp, getTelegramUser } from './telegram'
 import { ensureSupabaseSession, updateProfileInSupabase } from './lib/supabaseAuth'
+
+const SPLASH_MIN_MS = 1200
 
 function App() {
   const setUser = useStore((s) => s.setUser)
   const setProfileFromDb = useStore((s) => s.setProfileFromDb)
   const [dbProfileLoaded, setDbProfileLoaded] = useState(false)
+  const [appReady, setAppReady] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     initTelegramWebApp()
@@ -71,7 +78,29 @@ function App() {
     })
   }, [dbProfileLoaded, balance, userName, userAvatar, subscriptionStatus, generations, earned, slovoedFreeUsedToday, slovoedLastDate])
 
+  // Загрузочный экран: минимум SPLASH_MIN_MS, затем переход к онбордингу или приложению
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setAppReady(true)
+      setShowOnboarding(!getOnboardingDone())
+    }, SPLASH_MIN_MS)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Публичная страница квиза (/q/...) доступна без онбординга (по shared-ссылке)
+  const isPublicQuiz = typeof window !== 'undefined' && window.location.pathname.startsWith('/q/')
+  const showMainApp = appReady && (!showOnboarding || isPublicQuiz)
+
   return (
+    <>
+      <AnimatePresence mode="wait">
+        {!appReady && <LoadingScreen key="splash" />}
+        {appReady && showOnboarding && !isPublicQuiz && (
+          <Onboarding key="onboarding" onComplete={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
+
+      {showMainApp && (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
@@ -87,6 +116,8 @@ function App() {
         <Route path="/q/:id" element={<QuizPlay />} />
       </Routes>
     </BrowserRouter>
+      )}
+    </>
   )
 }
 

@@ -8,40 +8,21 @@ import { useStore } from '../store/useStore'
 import { Character } from '../components/Character'
 
 const CARD_WIDTH = 280
-const SIDE_SCALE = 0.78
-const SIDE_OPACITY = 0.5
 
 function ToolSlide({
   tool,
-  index,
-  currentIndex,
   onAction,
 }: {
   tool: ToolItem
-  index: number
-  currentIndex: number
   onAction: () => void
 }) {
-  const offset = index - currentIndex
-  const isCenter = offset === 0
-  const scale = isCenter ? 1 : SIDE_SCALE
-  const opacity = isCenter ? 1 : SIDE_OPACITY
-  const x = offset * (CARD_WIDTH * 0.88)
-  const zIndex = isCenter ? 10 : 5 - Math.abs(offset)
-
   return (
     <motion.div
-      className="absolute flex flex-col items-center justify-start pt-2"
+      className="absolute flex flex-col items-center justify-start pt-2 left-1/2"
       style={{
         width: CARD_WIDTH,
-        x,
-        scale,
-        opacity,
-        zIndex,
-        left: '50%',
         marginLeft: -CARD_WIDTH / 2,
       }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       {/* Облачко */}
       <motion.div
@@ -161,41 +142,101 @@ export function Home() {
   const currentTool = tools[currentIndex]
 
   return (
-    <div className="min-h-full pb-6">
+    <div className="min-h-full pb-6 relative">
+      {/* Тематический фон приложения: AI, нейросети, инструменты */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-50/95 via-white to-indigo-50/30" />
+        {/* Точки-узлы (нейросеть) */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, #6366f1 1.5px, transparent 0)`,
+            backgroundSize: '32px 32px',
+          }}
+        />
+        {/* Мягкие пятна */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-0 w-48 h-48 bg-violet-200/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 w-40 h-40 bg-amber-100/20 rounded-full blur-2xl" />
+        {/* Декоративные иконки по тематике (очень лёгкие) */}
+        <div className="absolute top-20 left-[10%] opacity-[0.08]">
+          <Sparkles className="text-indigo-500" size={28} strokeWidth={1.5} />
+        </div>
+        <div className="absolute top-32 right-[15%] opacity-[0.07]">
+          <Zap className="text-amber-500" size={24} strokeWidth={1.5} />
+        </div>
+        <div className="absolute bottom-40 left-[20%] opacity-[0.06]">
+          <MessageCircle className="text-violet-500" size={22} strokeWidth={1.5} />
+        </div>
+        <div className="absolute bottom-24 right-[12%] opacity-[0.07]">
+          <Sparkles className="text-indigo-400" size={20} strokeWidth={1.5} />
+        </div>
+      </div>
+
+      <div className="relative z-10">
       {/* Шапка: название приложения + аватарка из Telegram */}
       <HomeHeader balance={balance} />
 
       {/* Заголовок карусели */}
-      <div className="px-4 mb-1">
+      <div className="px-4 mb-2">
         <h2 className="text-slate-800 font-semibold text-[15px]">Помощники</h2>
-        <p className="text-slate-400 text-[13px] mt-0.5">Свайпните для смены</p>
+        <p className="text-slate-400 text-[13px] mt-0.5">Свайпните влево/вправо по карточке</p>
       </div>
 
-      {/* Карусель с персонажами */}
-      <motion.div
-        className="relative mx-auto"
-        style={{ height: 480, rotate }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(e, info) => {
-          handleDragEnd(e, info)
-          dragOffset.set(0)
-        }}
-        onDrag={(_, info) => dragOffset.set(info.offset.x)}
+      {/* Зона карусели: отдельный блок с фоном и только горизонтальным свайпом */}
+      <section
+        className="relative mx-4 rounded-3xl overflow-hidden min-h-[500px] border-2 border-slate-200/80 shadow-xl shadow-slate-200/50 touch-pan-x"
+        aria-label="Карусель помощников"
       >
-        <AnimatePresence initial={false}>
-          {tools.map((tool, index) => (
-            <ToolSlide
-              key={tool.id}
-              tool={tool}
-              index={index}
-              currentIndex={currentIndex}
-              onAction={() => handleToolAction(tool.id)}
-            />
-          ))}
-        </AnimatePresence>
-      </motion.div>
+        {/* Фон: градиент + декоративные элементы */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/80" />
+        <div className="absolute inset-0 overflow-hidden rounded-3xl">
+          {/* Мягкие круги на фоне */}
+          <div className="absolute -top-12 -left-12 w-40 h-40 rounded-full bg-indigo-200/30 blur-2xl" />
+          <div className="absolute top-1/3 -right-8 w-32 h-32 rounded-full bg-violet-200/25 blur-2xl" />
+          <div className="absolute bottom-8 left-1/4 w-24 h-24 rounded-full bg-amber-200/20 blur-xl" />
+          {/* Сетка-декор */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+              backgroundSize: '24px 24px',
+            }}
+          />
+          {/* Полупрозрачные дуги */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-indigo-100/40 to-transparent rounded-b-3xl" />
+        </div>
+
+        {/* Карусель */}
+        <motion.div
+          className="relative mx-auto"
+          style={{ height: 480, rotate }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(e, info) => {
+            handleDragEnd(e, info)
+            dragOffset.set(0)
+          }}
+          onDrag={(_, info) => dragOffset.set(info.offset.x)}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={tools[currentIndex].id}
+              initial={{ opacity: 0, x: 0 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 flex justify-center"
+            >
+              <ToolSlide
+                tool={tools[currentIndex]}
+                onAction={() => handleToolAction(tools[currentIndex].id)}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+      </section>
 
       {/* Точки и название текущего инструмента */}
       <div className="flex flex-col items-center gap-2 mt-2">
@@ -275,6 +316,7 @@ export function Home() {
           })}
         </ul>
       </motion.section>
+      </div>
     </div>
   )
 }
