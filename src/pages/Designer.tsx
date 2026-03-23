@@ -1,127 +1,71 @@
 import { Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
-  LayoutGrid,
-  Youtube,
-  FileText,
-  Lock,
+  Check,
+  ChevronRight,
+  ImageIcon,
+  Info,
+  List,
   Mic,
   MicOff,
-  ChevronRight,
-  ImagePlus,
-  Sparkles,
-  Check,
-  Info,
-  Zap,
-  MessageSquare,
-  Target,
-  BookOpen,
-  List,
   Plus,
-  X,
+  Sparkles,
   Trash2,
+  X,
+  WandSparkles,
 } from 'lucide-react'
-import { generateImageNanoBananaPro } from '../services/api/kieApi'
+import { generateImageNanoBananaPro, type AspectRatio, type OutputFormat, type Resolution } from '../services/api/kieApi'
 import { useStore } from '../store/useStore'
 import { useDesignerStore } from '../store/useDesignerStore'
 import { DESIGN_STYLES, type DesignStyle } from '../data/designerStyles'
 
-const DESIGN_TOOLS = [
-  {
-    id: 'carousel',
-    title: 'Карусель',
-    description: 'Посты и слайды для соцсетей',
-    detail: 'Instagram, Telegram, VK — до 10 слайдов в одном посте',
-    icon: LayoutGrid,
-    available: true,
-  },
-  {
-    id: 'youtube',
-    title: 'YouTube',
-    description: 'Обложки и превью',
-    detail: 'Яркие превью для видео и сторис',
-    icon: Youtube,
-    available: false,
-  },
-  {
-    id: 'pdf',
-    title: 'PDF',
-    description: 'Лид-магниты и гайды',
-    detail: 'Обложки и иллюстрации для документов',
-    icon: FileText,
-    available: false,
-  },
+const PHOTO_GENRES = [
+  { id: 'portrait', label: 'Портрет', hint: 'профессиональный портрет, focus on face, realistic skin texture' },
+  { id: 'fashion', label: 'Fashion', hint: 'high-fashion editorial, stylized styling, premium look' },
+  { id: 'product', label: 'Предметка', hint: 'product photography, clean composition, commercial quality' },
+  { id: 'cinematic', label: 'Cinematic', hint: 'cinematic still frame, dramatic storytelling, movie lighting' },
+  { id: 'lifestyle', label: 'Lifestyle', hint: 'lifestyle photography, natural moment, candid vibe' },
+  { id: 'concept', label: 'Концепт-арт', hint: 'concept art, imaginative scene, strong atmosphere' },
 ] as const
 
-const SCENARIOS = [
-  { id: 'sales', label: 'Продажи', desc: 'Воронки, офферы, лид-магниты', icon: Target },
-  { id: 'content', label: 'Вовлечение', desc: 'Лайфхаки, подборки, инфографика', icon: MessageSquare },
-  { id: 'education', label: 'Обучение', desc: 'Объяснения, чек-листы, шаги', icon: BookOpen },
+const MOODS = [
+  { id: 'calm', label: 'Спокойно', hint: 'calm mood, soft emotional tone' },
+  { id: 'bold', label: 'Смело', hint: 'bold and expressive energy' },
+  { id: 'luxury', label: 'Премиум', hint: 'luxury aesthetic, refined details' },
+  { id: 'dramatic', label: 'Драматично', hint: 'dramatic emotional contrast' },
 ] as const
 
-function StylePreviewCard({
-  style,
-  selected,
-  onSelect,
-}: {
-  style: DesignStyle
-  selected: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`shrink-0 w-24 text-left rounded-2xl overflow-hidden border-2 transition-all active:scale-[0.98] shadow-sm ${
-        selected ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-md' : 'border-slate-200 hover:border-slate-300 hover:shadow'
-      }`}
-    >
-      <div className={`aspect-square relative ${style.previewClass}`}>
-        {style.previewInner === 'dots' && (
-          <div className="absolute inset-0 flex items-center justify-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className="w-1.5 h-1.5 rounded-full bg-white/80" style={{ marginLeft: i % 2 === 0 ? 2 : 0 }} />
-            ))}
-          </div>
-        )}
-        {style.previewInner === 'lines' && (
-          <div className="absolute inset-0 flex flex-col justify-center gap-1 px-2">
-            <div className="h-0.5 w-full bg-black/20 rounded" />
-            <div className="h-0.5 w-3/4 bg-black/20 rounded self-center" />
-            <div className="h-0.5 w-1/2 bg-black/20 rounded self-center" />
-          </div>
-        )}
-        {style.previewInner === 'circle' && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-slate-300" />
-          </div>
-        )}
-        {style.previewInner === 'grid' && (
-          <div className="absolute inset-0 grid grid-cols-3 gap-0.5 p-1">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="bg-white/30 rounded-sm" />
-            ))}
-          </div>
-        )}
-        {style.previewInner === 'wave' && (
-          <div className="absolute bottom-0 left-0 right-0 h-4 bg-white/20 rounded-t-full" />
-        )}
-        {selected && (
-          <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-            <Check size={12} className="text-white" strokeWidth={3} />
-          </div>
-        )}
-      </div>
-      <p className="px-2 py-2 text-[11px] font-medium text-slate-700 truncate bg-white/95">{style.name}</p>
-    </button>
-  )
-}
+const LIGHTING = [
+  { id: 'soft', label: 'Мягкий свет', hint: 'soft diffused light' },
+  { id: 'studio', label: 'Студийный', hint: 'clean studio lighting, high detail' },
+  { id: 'neon', label: 'Неон', hint: 'neon lighting, glow and contrast' },
+  { id: 'golden', label: 'Golden hour', hint: 'golden hour sunlight' },
+] as const
+
+const CAMERA_ANGLES = [
+  { id: 'eye-level', label: 'На уровне глаз', hint: 'eye-level shot' },
+  { id: 'low-angle', label: 'Нижний ракурс', hint: 'low angle shot' },
+  { id: 'top-down', label: 'Сверху', hint: 'top-down shot' },
+  { id: 'close-up', label: 'Крупный план', hint: 'close-up framing' },
+] as const
+
+const ASPECTS: { value: AspectRatio; label: string }[] = [
+  { value: '1:1', label: '1:1 Квадрат' },
+  { value: '3:4', label: '3:4 Портрет' },
+  { value: '4:5', label: '4:5 Instagram' },
+  { value: '16:9', label: '16:9 Обложка' },
+  { value: '9:16', label: '9:16 Stories' },
+]
+
+const RESOLUTIONS: Resolution[] = ['1K', '2K', '4K']
+const FORMATS: OutputFormat[] = ['png', 'jpg']
 
 function useVoiceInput(onResult: (text: string) => void) {
   const [listening, setListening] = useState(false)
   const recRef = useRef<SpeechRecognition | null>(null)
+
   const start = useCallback(() => {
     const SR = (window as unknown as { SpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition ||
       (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition
@@ -138,101 +82,181 @@ function useVoiceInput(onResult: (text: string) => void) {
     rec.start()
     setListening(true)
   }, [onResult])
+
   const stop = useCallback(() => {
     recRef.current?.stop()
     setListening(false)
   }, [])
+
   return { listening, start, stop }
 }
 
+function StylePreviewCard({ style, selected, onSelect }: { style: DesignStyle; selected: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`shrink-0 w-24 text-left rounded-2xl overflow-hidden border-2 transition-all active:scale-[0.98] shadow-sm ${
+        selected ? 'border-cyan-500 ring-2 ring-cyan-500/30 shadow-md' : 'border-slate-200 hover:border-slate-300 hover:shadow'
+      }`}
+    >
+      <div className={`aspect-square relative ${style.previewClass}`}>
+        {style.previewInner === 'dots' && <div className="absolute inset-0 bg-[radial-gradient(circle_at_6px_6px,rgba(255,255,255,.7)_1.4px,transparent_0)] [background-size:14px_14px]" />}
+        {style.previewInner === 'lines' && <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_35%,rgba(0,0,0,.2)_36%,transparent_37%)] [background-size:100%_14px]" />}
+        {style.previewInner === 'circle' && <div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-slate-300" /></div>}
+        {style.previewInner === 'grid' && <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.3)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.3)_1px,transparent_1px)] [background-size:14px_14px]" />}
+        {style.previewInner === 'wave' && <div className="absolute bottom-0 left-0 right-0 h-4 bg-white/20 rounded-t-full" />}
+        {selected && (
+          <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center">
+            <Check size={12} className="text-white" strokeWidth={3} />
+          </div>
+        )}
+      </div>
+      <p className="px-2 py-2 text-[11px] font-medium text-slate-700 truncate bg-white/95">{style.name}</p>
+    </button>
+  )
+}
+
+function OptionChips({
+  items,
+  value,
+  onChange,
+}: {
+  items: readonly { id: string; label: string }[]
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => onChange(item.id)}
+          className={`rounded-xl px-3.5 py-2 text-sm border-2 transition-all ${
+            value === item.id
+              ? 'bg-cyan-50 border-cyan-300 text-cyan-700'
+              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function Designer() {
-  const { userAvatar, userName } = useStore()
-  const {
-    sessions,
-    currentSessionId,
-    addSession,
-    setCurrentSession,
-    getSession,
-    updateSession,
-    deleteSession,
-    getCurrentSession,
-  } = useDesignerStore()
-  const [view, setView] = useState<'list' | 'carousel'>('list')
+  const { userAvatar, userName, useToolCharge, getToolFreeRemaining, getToolPrice, incrementGenerations, planId } = useStore()
+  const { sessions, currentSessionId, addSession, setCurrentSession, getSession, updateSession, deleteSession } = useDesignerStore()
+  const [view, setView] = useState<'list' | 'editor'>('list')
   const [sessionsOpen, setSessionsOpen] = useState(false)
-  const [step, setStep] = useState(1)
   const [prompt, setPrompt] = useState('')
-  const [selectedStyleId, setSelectedStyleId] = useState<string>(DESIGN_STYLES[0].id)
-  const [scenario, setScenario] = useState<string>(SCENARIOS[0].id)
-  const [ctaType, setCtaType] = useState<'keyword' | 'auto'>('keyword')
-  const [keyword, setKeyword] = useState('ХОЧУ')
-  const [ctaContent, setCtaContent] = useState('')
+  const [selectedStyleId, setSelectedStyleId] = useState(DESIGN_STYLES[0].id)
+  const [genre, setGenre] = useState(PHOTO_GENRES[0].id)
+  const [mood, setMood] = useState(MOODS[0].id)
+  const [lighting, setLighting] = useState(LIGHTING[0].id)
+  const [cameraAngle, setCameraAngle] = useState(CAMERA_ANGLES[0].id)
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('4:5')
+  const [resolution, setResolution] = useState<Resolution>('2K')
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('png')
+  const [negativePrompt, setNegativePrompt] = useState('')
   const [generating, setGenerating] = useState(false)
   const [resultUrl, setResultUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // При входе в карусель — гарантируем текущую сессию и подгружаем её данные
-  useEffect(() => {
-    if (view !== 'carousel') return
-    const cur = getCurrentSession()
-    if (cur) {
-      setPrompt(cur.prompt)
-      setSelectedStyleId(cur.selectedStyleId)
-      setScenario(cur.scenario)
-      setCtaType(cur.ctaType)
-      setKeyword(cur.keyword)
-      setCtaContent(cur.ctaContent)
-      setResultUrl(cur.resultUrl)
-      setStep(1)
-    } else if (sessions.length === 0) {
-      addSession()
-    } else {
-      setCurrentSession(sessions[0].id)
-    }
-  }, [view, currentSessionId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const onVoiceResult = useCallback((text: string) => setPrompt((prev) => (prev ? `${prev} ${text}` : text)), [])
+  const { listening, start: startVoice, stop: stopVoice } = useVoiceInput(onVoiceResult)
 
-  // Синхронизация формы в текущую сессию (без resultUrl — он ставится после генерации)
   useEffect(() => {
-    if (view !== 'carousel' || !currentSessionId) return
+    if (view !== 'editor') return
+    if (!currentSessionId && sessions.length === 0) {
+      addSession()
+      return
+    }
+    if (!currentSessionId && sessions.length > 0) {
+      setCurrentSession(sessions[0].id)
+      return
+    }
+    if (!currentSessionId) return
+    const cur = getSession(currentSessionId)
+    if (!cur) return
+    setPrompt(cur.prompt ?? '')
+    setSelectedStyleId(cur.selectedStyleId ?? DESIGN_STYLES[0].id)
+    setGenre(cur.genre ?? PHOTO_GENRES[0].id)
+    setMood(cur.mood ?? MOODS[0].id)
+    setLighting(cur.lighting ?? LIGHTING[0].id)
+    setCameraAngle(cur.cameraAngle ?? CAMERA_ANGLES[0].id)
+    setAspectRatio((cur.aspectRatio ?? '4:5') as AspectRatio)
+    setResolution((cur.resolution ?? '2K') as Resolution)
+    setOutputFormat((cur.outputFormat ?? 'png') as OutputFormat)
+    setNegativePrompt(cur.negativePrompt ?? '')
+    setResultUrl(cur.resultUrl ?? null)
+  }, [view, currentSessionId, sessions, addSession, setCurrentSession, getSession])
+
+  useEffect(() => {
+    if (view !== 'editor' || !currentSessionId) return
     updateSession(currentSessionId, {
       prompt,
       selectedStyleId,
-      scenario,
-      ctaType,
-      keyword,
-      ctaContent,
+      genre,
+      mood,
+      lighting,
+      cameraAngle,
+      aspectRatio: aspectRatio as '1:1' | '3:4' | '4:5' | '16:9' | '9:16',
+      resolution,
+      outputFormat,
+      negativePrompt,
     })
-  }, [prompt, selectedStyleId, scenario, ctaType, keyword, ctaContent, view, currentSessionId, updateSession])
+  }, [view, currentSessionId, prompt, selectedStyleId, genre, mood, lighting, cameraAngle, aspectRatio, resolution, outputFormat, negativePrompt, updateSession])
 
-  const onVoiceResult = useCallback((text: string) => setPrompt((p) => (p ? `${p} ${text}` : text)), [])
-  const { listening, start: startVoice, stop: stopVoice } = useVoiceInput(onVoiceResult)
-  const selectedStyle = DESIGN_STYLES.find((s) => s.id === selectedStyleId)
+  const selectedStyle = useMemo(() => DESIGN_STYLES.find((s) => s.id === selectedStyleId), [selectedStyleId])
+  const selectedGenre = PHOTO_GENRES.find((g) => g.id === genre)
+  const selectedMood = MOODS.find((x) => x.id === mood)
+  const selectedLighting = LIGHTING.find((x) => x.id === lighting)
+  const selectedCamera = CAMERA_ANGLES.find((x) => x.id === cameraAngle)
+
+  const fullPrompt = useMemo(() => {
+    const chunks = [
+      prompt.trim(),
+      `Genre: ${selectedGenre?.hint ?? ''}.`,
+      `Style: ${selectedStyle?.promptHint ?? ''}.`,
+      `Mood: ${selectedMood?.hint ?? ''}.`,
+      `Lighting: ${selectedLighting?.hint ?? ''}.`,
+      `Camera: ${selectedCamera?.hint ?? ''}.`,
+      'Photorealistic, high detail, modern composition, clean professional rendering.',
+      negativePrompt.trim() ? `Negative prompt: ${negativePrompt.trim()}.` : '',
+    ]
+    return chunks.filter(Boolean).join(' ')
+  }, [prompt, selectedGenre, selectedStyle, selectedMood, selectedLighting, selectedCamera, negativePrompt])
 
   const handleGenerate = async () => {
-    setError(null)
+    if (!prompt.trim() || generating) return
+    if (!useToolCharge('designer')) {
+      setError(`Недостаточно нейронов. Бесплатные генерации на сегодня закончились. Стоимость: ${getToolPrice('designer')} нейронов.`)
+      return
+    }
     setGenerating(true)
-    const styleHint = selectedStyle?.promptHint ?? ''
-    const fullPrompt = [
-      prompt,
-      `Стиль: ${styleHint}.`,
-      `Сценарий: ${SCENARIOS.find((s) => s.id === scenario)?.label ?? scenario}.`,
-      ctaType === 'keyword' && keyword ? `Призыв: кодовое слово "${keyword}". ${ctaContent}` : ctaType === 'auto' ? `Призыв: подпишись/сохрани. ${ctaContent}` : '',
-    ].filter(Boolean).join(' ')
+    setError(null)
     try {
       const result = await generateImageNanoBananaPro({
         prompt: fullPrompt.slice(0, 10000),
-        aspect_ratio: '4:5',
-        resolution: '2K',
-        output_format: 'png',
+        aspect_ratio: aspectRatio,
+        resolution,
+        output_format: outputFormat,
       })
       if (result.state === 'success' && result.imageUrl) {
         setResultUrl(result.imageUrl)
+        incrementGenerations(1)
         if (currentSessionId) {
           updateSession(currentSessionId, {
             resultUrl: result.imageUrl,
-            title: (prompt || 'Карусель').trim().slice(0, 40) || 'Без названия',
+            title: prompt.trim().slice(0, 36) || 'Новая генерация',
           })
         }
-      } else setError(result.failMsg || 'Генерация не удалась')
+      } else {
+        setError(result.failMsg || 'Не удалось завершить генерацию')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка сети')
     } finally {
@@ -240,402 +264,259 @@ export function Designer() {
     }
   }
 
-  if (resultUrl) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-        <header className="sticky top-0 z-10 flex items-center h-14 px-4 bg-white/80 backdrop-blur border-b border-slate-100">
-          <button type="button" onClick={() => setResultUrl(null)} className="flex items-center gap-2 text-slate-600 hover:text-slate-900">
-            <ArrowLeft size={20} /> Назад
-          </button>
-          <span className="flex-1 text-center font-semibold text-slate-800">Готово</span>
-          <div className="w-14" />
-        </header>
-        <div className="p-4 space-y-4">
-          <div className="rounded-2xl overflow-hidden shadow-md ring-1 ring-slate-100">
-            <img src={resultUrl} alt="Сгенерировано" className="w-full aspect-[4/5] object-cover" />
-          </div>
-          <p className="text-center text-xs text-slate-500">Формат 4:5, 2K · Долгое нажатие — сохранить</p>
-        </div>
-      </div>
-    )
-  }
-
   if (view === 'list') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-        <header className="sticky top-0 z-10 flex items-center h-14 px-4 bg-white/80 backdrop-blur border-b border-slate-100">
-          <Link to="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900">
-            <ArrowLeft size={20} />
-          </Link>
+      <div className="min-h-screen relative overflow-hidden">
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-cyan-50/70 via-white to-indigo-50/50" />
+          <motion.div className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-cyan-200/25 blur-3xl" animate={{ y: [0, 18, 0], x: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 9 }} />
+          <motion.div className="absolute top-1/3 -left-16 w-64 h-64 rounded-full bg-indigo-200/20 blur-3xl" animate={{ y: [0, -20, 0] }} transition={{ repeat: Infinity, duration: 10 }} />
+        </div>
+        <header className="relative z-10 sticky top-0 flex items-center h-14 px-4 bg-white/75 backdrop-blur-xl border-b border-slate-100/80">
+          <Link to="/" className="text-slate-600 hover:text-slate-900"><ArrowLeft size={20} /></Link>
           <div className="flex-1 text-center">
-            <span className="text-sm font-semibold text-slate-800">Студия</span>
+            <span className="text-sm font-semibold text-slate-800">Flow Studio</span>
+            <p className="text-[11px] text-slate-500 -mt-0.5">Генерация фото через Kie AI</p>
           </div>
-          <Link
-            to="/profile"
-            className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm border border-slate-200"
-          >
+          <Link to="/profile" className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm border border-slate-200">
             {userAvatar ? <img src={userAvatar} alt="" className="w-full h-full object-cover" /> : userName.slice(0, 1).toUpperCase()}
           </Link>
         </header>
-        <div className="p-5">
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/80 flex items-center justify-center shrink-0 shadow-sm">
-                <Zap className="text-emerald-500" size={22} />
+
+        <div className="relative z-10 p-5 space-y-5">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-white/85 backdrop-blur border border-white shadow-xl shadow-slate-200/60 p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <WandSparkles size={23} />
               </div>
-              <div>
-                <h2 className="font-bold text-slate-800 text-lg">Визуал с AI</h2>
-                <p className="text-sm text-slate-600 mt-0.5">Картинки и карусели по текстовому описанию. Выберите инструмент, опишите идею и стиль — нейросеть создаст изображение за минуты.</p>
+              <div className="min-w-0">
+                <h1 className="font-bold text-slate-900 text-xl">Фото-генерации</h1>
+                <p className="text-sm text-slate-600 mt-1">Современная генерация кадров в любом жанре с параметрами сцены, света и ракурса.</p>
+                <p className="mt-2 text-xs text-cyan-700 bg-cyan-50 border border-cyan-100 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5">
+                  <Sparkles size={12} /> Модель: Kie AI · nano-banana-pro
+                </p>
+                <p className="mt-2 text-xs text-slate-600">
+                  План: {planId.toUpperCase()} · Бесплатно сегодня: {getToolFreeRemaining('designer')} · Далее {getToolPrice('designer')} нейронов
+                </p>
               </div>
             </div>
-          </div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Инструменты</p>
-          <div className="space-y-3">
-            {DESIGN_TOOLS.map((tool) => {
-              const Icon = tool.icon
-              return (
-                <motion.div
-                  key={tool.id}
-                  className={`rounded-2xl p-4 flex items-center gap-4 border transition-all ${
-                    tool.available
-                      ? 'bg-white border-slate-200 shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-200 active:scale-[0.99]'
-                      : 'bg-slate-50/80 border-slate-100 opacity-75'
-                  }`}
-                  onClick={() => tool.available && setView('carousel')}
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                    <Icon className="text-emerald-600" size={26} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-800">{tool.title}</h3>
-                    <p className="text-sm text-slate-600">{tool.description}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{tool.detail}</p>
-                  </div>
-                  {tool.available ? (
-                    <ChevronRight className="text-emerald-500 shrink-0" size={22} />
-                  ) : (
-                    <span className="flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-700 px-2.5 py-1 text-xs font-medium shrink-0">
-                      <Lock size={10} /> Скоро
-                    </span>
-                  )}
-                </motion.div>
-              )
-            })}
-          </div>
-          <p className="text-xs text-slate-400 text-center mt-6">Модель: Nano Banana Pro · Высокое качество 2K</p>
+          </motion.div>
+
+          <motion.button
+            type="button"
+            onClick={() => setView('editor')}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="w-full rounded-3xl bg-white border border-slate-200 p-4 text-left shadow-sm hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">
+                <ImageIcon className="text-cyan-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800">Новая генерация</p>
+                <p className="text-xs text-slate-500">Жанр, стиль, настроение, свет, ракурс, формат</p>
+              </div>
+              <ChevronRight className="text-cyan-500" />
+            </div>
+          </motion.button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800 pb-28">
-      <header className="sticky top-0 z-10 flex items-center h-14 px-4 bg-white/80 backdrop-blur border-b border-slate-100">
-        <button
-          type="button"
-          onClick={() => (step === 1 ? setView('list') : setStep(1))}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1 flex justify-center items-center gap-2">
-          <span className={`text-sm font-semibold ${step === 1 ? 'text-emerald-500' : 'text-slate-400'}`}>1</span>
-          <span className="w-8 h-0.5 bg-slate-200 rounded" />
-          <span className={`text-sm font-semibold ${step === 2 ? 'text-emerald-500' : 'text-slate-400'}`}>2</span>
+    <div className="min-h-screen relative overflow-hidden pb-28">
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-cyan-50/75 via-white to-indigo-50/50" />
+        <motion.div className="absolute -top-24 -right-10 w-80 h-80 rounded-full bg-cyan-200/25 blur-3xl" animate={{ y: [0, 16, 0] }} transition={{ repeat: Infinity, duration: 8 }} />
+        <motion.div className="absolute top-2/3 -left-20 w-72 h-72 rounded-full bg-blue-200/20 blur-3xl" animate={{ y: [0, -18, 0] }} transition={{ repeat: Infinity, duration: 10 }} />
+      </div>
+
+      <header className="relative z-10 sticky top-0 flex items-center h-14 px-4 bg-white/75 backdrop-blur-xl border-b border-slate-100/80">
+        <button type="button" onClick={() => setView('list')} className="text-slate-600 hover:text-slate-900"><ArrowLeft size={20} /></button>
+        <div className="flex-1 text-center">
+          <span className="text-sm font-semibold text-slate-800">Flow Photo</span>
+          <p className="text-[11px] text-slate-500 -mt-0.5">Kie AI · nano-banana-pro</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setSessionsOpen(true)}
-          className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-          aria-label="Сессии"
-        >
-          <List size={22} />
+        <button type="button" onClick={() => setSessionsOpen(true)} className="p-2 rounded-xl text-slate-500 hover:bg-slate-100" aria-label="Сессии">
+          <List size={21} />
         </button>
       </header>
 
       <AnimatePresence>
         {sessionsOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 z-20"
-              aria-hidden
-              onClick={() => setSessionsOpen(false)}
-            />
-            <motion.div
+            <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/25 z-20" onClick={() => setSessionsOpen(false)} />
+            <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.2 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white shadow-xl z-30 flex flex-col"
-          >
-            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-100">
-              <span className="font-semibold text-slate-800">Сессии</span>
-              <button
-                type="button"
-                onClick={() => setSessionsOpen(false)}
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4">
-              <button
-                type="button"
-                onClick={() => {
-                  addSession()
-                  setResultUrl(null)
-                  setSessionsOpen(false)
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600"
-              >
-                <Plus size={18} /> Новая сессия
-              </button>
-            </div>
-            <ul className="flex-1 overflow-y-auto px-4 pb-6 space-y-2">
-              {sessions.map((s) => {
-                const title = (s.title && s.title !== 'Новая сессия' ? s.title : s.prompt?.trim().slice(0, 30) || 'Без названия')
-                return (
-                  <li key={s.id} className="flex items-center gap-2 group">
+              transition={{ type: 'spring', damping: 26, stiffness: 260 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white z-30 border-l border-slate-200 shadow-2xl"
+            >
+              <div className="h-14 border-b border-slate-100 px-4 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-800">Сессии</p>
+                  <p className="text-[11px] text-slate-500">{sessions.length} сохранено</p>
+                </div>
+                <button type="button" onClick={() => setSessionsOpen(false)} className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"><X size={20} /></button>
+              </div>
+              <div className="p-4 border-b border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopVoice()
+                    addSession()
+                    setResultUrl(null)
+                    setSessionsOpen(false)
+                  }}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold flex items-center justify-center gap-2 shadow-md shadow-cyan-500/25"
+                >
+                  <Plus size={18} /> Новая сессия
+                </button>
+              </div>
+              <ul className="p-4 space-y-2 overflow-y-auto overscroll-y-contain max-h-[calc(100vh-120px)] pr-2">
+                {sessions.map((s) => (
+                  <li key={s.id} className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         setCurrentSession(s.id)
-                        const cur = getSession(s.id)
-                        if (cur) {
-                          setPrompt(cur.prompt)
-                          setSelectedStyleId(cur.selectedStyleId)
-                          setScenario(cur.scenario)
-                          setCtaType(cur.ctaType)
-                          setKeyword(cur.keyword)
-                          setCtaContent(cur.ctaContent)
-                          setResultUrl(cur.resultUrl)
-                          setStep(1)
-                        }
                         setSessionsOpen(false)
                       }}
-                      className="flex-1 text-left py-3 px-3 rounded-xl border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/50 text-slate-800"
+                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-left hover:border-cyan-200 hover:bg-cyan-50/50 transition-colors"
                     >
-                      <span className="block truncate text-sm font-medium">{title}</span>
-                      <span className="block text-xs text-slate-500 mt-0.5">
-                        {s.resultUrl ? 'Есть результат' : 'Черновик'} · {new Date(s.updatedAt).toLocaleDateString('ru')}
-                      </span>
+                      <p className="text-sm font-medium text-slate-800 truncate">{s.title || s.prompt.slice(0, 24) || 'Без названия'}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{s.resultUrl ? 'Есть результат' : 'Черновик'} · {new Date(s.updatedAt).toLocaleDateString('ru-RU')}</p>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteSession(s.id)}
-                      className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500"
-                      aria-label="Удалить"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <button type="button" onClick={() => deleteSession(s.id)} className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500"><Trash2 size={17} /></button>
                   </li>
-                )
-              })}
-            </ul>
-          </motion.div>
+                ))}
+              </ul>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
 
-      <div className="px-4 py-5">
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 flex gap-3">
-                <Info className="text-blue-500 shrink-0 mt-0.5" size={18} />
-                <p className="text-sm text-slate-700">Чем детальнее опишете тему и идею — тем точнее получится результат. Можно голосом.</p>
-              </div>
+      <div className="relative z-10 px-4 py-5 space-y-5 scroll-smooth">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-sm text-cyan-800 flex gap-2.5">
+          <Info className="shrink-0 mt-0.5" size={16} />
+          Чем конкретнее описание объекта и контекста, тем лучше итог. Можно дополнительно уточнить негативный промпт. Бесплатно: {getToolFreeRemaining('designer')} генераций сегодня.
+        </motion.div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-800 mb-1">О чём карусель?</label>
-                <p className="text-xs text-slate-500 mb-2">Тема, ключевые пункты или один слоган</p>
-                <div className="relative">
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value.slice(0, 5000))}
-                    placeholder="Например: 5 способов повысить конверсию, 10 ошибок новичков в продажах..."
-                    rows={4}
-                    className="w-full rounded-2xl bg-white border border-slate-200 px-4 py-3 pr-12 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 resize-none shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={listening ? stopVoice : startVoice}
-                    className={`absolute bottom-3 right-3 p-2.5 rounded-xl ${listening ? 'bg-red-100 text-red-500' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'}`}
-                    aria-label="Голос"
-                  >
-                    {listening ? <MicOff size={18} /> : <Mic size={18} />}
-                  </button>
-                </div>
-                <p className="text-xs text-slate-400 mt-1.5">{prompt.length} / 5000 символов</p>
-              </div>
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-3xl bg-white/90 border border-slate-200 p-4 shadow-sm">
+          <label className="text-sm font-semibold text-slate-800">Что нужно сгенерировать?</label>
+          <div className="relative mt-2">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value.slice(0, 5000))}
+              rows={4}
+              placeholder="Например: портрет девушки в красном пальто на вечерней улице Токио, cinematic, bokeh..."
+              className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-[15px] text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400"
+            />
+            <button type="button" onClick={listening ? stopVoice : startVoice} className={`absolute right-3 bottom-3 p-2.5 rounded-xl ${listening ? 'bg-red-100 text-red-500' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+              {listening ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
+          </div>
+          <p className="text-xs text-slate-400 mt-1.5">{prompt.length} / 5000</p>
+        </motion.section>
 
-              <div>
-                <p className="text-sm font-semibold text-slate-800 mb-1">Визуальный стиль</p>
-                <p className="text-xs text-slate-500 mb-3">Влияет на цвета, типографику и настроение картинки</p>
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1">
-                  {DESIGN_STYLES.map((s) => (
-                    <StylePreviewCard
-                      key={s.id}
-                      style={s}
-                      selected={selectedStyleId === s.id}
-                      onSelect={() => setSelectedStyleId(s.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-white border border-slate-200 p-4 flex items-center gap-3 shadow-sm">
-                  <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                    <ImagePlus className="text-slate-400" size={22} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">Своё фото</p>
-                    <p className="text-xs text-slate-500">Опционально, в разработке</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white border border-emerald-100 p-4 flex items-center gap-3 shadow-sm">
-                  <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-                    <Sparkles className="text-emerald-500" size={22} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">Стиль</p>
-                    <p className="text-xs text-emerald-600 truncate font-medium">{selectedStyle?.name ?? ''}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-slate-800 mb-1">Сценарий использования</p>
-                <p className="text-xs text-slate-500 mb-3">Подскажет нейросети, для какой цели контент</p>
-                <div className="flex flex-col gap-2">
-                  {SCENARIOS.map((s) => {
-                    const Icon = s.icon
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setScenario(s.id)}
-                        className={`shrink-0 rounded-xl px-4 py-3 text-left flex items-center gap-3 border-2 transition-all ${
-                          scenario === s.id ? 'bg-emerald-50 border-emerald-300 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <Icon className={scenario === s.id ? 'text-emerald-600' : 'text-slate-400'} size={20} />
-                        <div>
-                          <p className="font-semibold text-slate-800 text-sm">{s.label}</p>
-                          <p className="text-xs text-slate-500">{s.desc}</p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-3xl bg-white/90 border border-slate-200 p-4 shadow-sm">
+          <p className="text-sm font-semibold text-slate-800 mb-2">Жанр</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {PHOTO_GENRES.map((g) => (
               <button
+                key={g.id}
                 type="button"
-                onClick={() => setStep(2)}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold flex items-center justify-center gap-2 shadow-md"
+                onClick={() => setGenre(g.id)}
+                className={`rounded-2xl p-3 border-2 text-left transition-all ${genre === g.id ? 'border-cyan-300 bg-cyan-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
               >
-                Дальше: призыв к действию <ChevronRight size={20} />
+                <p className="font-medium text-sm text-slate-800">{g.label}</p>
+                <p className="text-[11px] text-slate-500 mt-1">{g.hint.split(',')[0]}</p>
               </button>
-            </motion.div>
-          )}
+            ))}
+          </div>
+        </motion.section>
 
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 flex gap-3">
-                <Target className="text-amber-600 shrink-0 mt-0.5" size={18} />
-                <p className="text-sm text-slate-700">Призыв к действию — что человек должен сделать на последнем слайде. Кодовое слово ведёт в лид/продажу, авто-охват — в подписку или сохранение.</p>
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-slate-800 text-lg">Тип призыва</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Выберите один вариант</p>
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setCtaType('keyword')}
-                    className={`rounded-2xl p-4 text-left border-2 transition-all shadow-sm ${
-                      ctaType === 'keyword' ? 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <p className="font-semibold text-slate-800">Кодовое слово</p>
-                    <p className="text-xs text-slate-500 mt-1">Клиент пишет слово в директ → получает оффер</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCtaType('auto')}
-                    className={`rounded-2xl p-4 text-left border-2 transition-all shadow-sm ${
-                      ctaType === 'auto' ? 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <p className="font-semibold text-slate-800">Авто-охват</p>
-                    <p className="text-xs text-slate-500 mt-1">Подпишись или Сохрани пост</p>
-                  </button>
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="rounded-3xl bg-white/90 border border-slate-200 p-4 shadow-sm space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-800 mb-2">Стиль</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 pr-1 snap-x snap-mandatory">
+              {DESIGN_STYLES.map((style) => (
+                <div key={style.id} className="snap-start">
+                  <StylePreviewCard style={style} selected={selectedStyleId === style.id} onSelect={() => setSelectedStyleId(style.id)} />
                 </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-800 mb-2">Настроение</p>
+            <OptionChips items={MOODS} value={mood} onChange={setMood} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-800 mb-2">Освещение</p>
+            <OptionChips items={LIGHTING} value={lighting} onChange={setLighting} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-800 mb-2">Ракурс</p>
+            <OptionChips items={CAMERA_ANGLES} value={cameraAngle} onChange={setCameraAngle} />
+          </div>
+        </motion.section>
+
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="rounded-3xl bg-white/90 border border-slate-200 p-4 shadow-sm">
+          <p className="text-sm font-semibold text-slate-800 mb-2">Параметры генерации</p>
+          <div className="grid grid-cols-1 gap-3">
+            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700">
+              {ASPECTS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+            </select>
+            <div className="flex gap-2">
+              {RESOLUTIONS.map((value) => (
+                <button key={value} type="button" onClick={() => setResolution(value)} className={`flex-1 h-10 rounded-xl border-2 text-sm ${resolution === value ? 'border-cyan-300 bg-cyan-50 text-cyan-700' : 'border-slate-200 text-slate-600'}`}>{value}</button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {FORMATS.map((value) => (
+                <button key={value} type="button" onClick={() => setOutputFormat(value)} className={`flex-1 h-10 rounded-xl border-2 text-sm uppercase ${outputFormat === value ? 'border-cyan-300 bg-cyan-50 text-cyan-700' : 'border-slate-200 text-slate-600'}`}>{value}</button>
+              ))}
+            </div>
+            <textarea
+              value={negativePrompt}
+              onChange={(e) => setNegativePrompt(e.target.value.slice(0, 2000))}
+              rows={3}
+              placeholder="Negative prompt (опционально): blur, low quality, distorted hands..."
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-700 resize-none"
+            />
+          </div>
+        </motion.section>
+
+        {error && <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>}
+
+        <motion.button
+          type="button"
+          onClick={handleGenerate}
+          disabled={!prompt.trim() || generating}
+          whileTap={{ scale: 0.98 }}
+          className="w-full h-13 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/30 disabled:opacity-55 disabled:pointer-events-none"
+        >
+          {generating ? 'Генерация в Flow...' : 'Сгенерировать фото'}
+        </motion.button>
+
+        <div className="rounded-2xl bg-white/90 border border-slate-200 p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1">Промпт для Kie AI</p>
+          <p className="text-[13px] text-slate-700 leading-relaxed line-clamp-5">{fullPrompt || 'Заполните описание, чтобы увидеть итоговый промпт.'}</p>
+        </div>
+
+        <AnimatePresence>
+          {resultUrl && (
+            <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-3xl overflow-hidden border border-slate-200 shadow-lg bg-white">
+              <img src={resultUrl} alt="Generated" className="w-full object-cover" />
+              <div className="p-4">
+                <p className="text-sm font-semibold text-slate-800">Готово</p>
+                <p className="text-xs text-slate-500 mt-1">{aspectRatio} · {resolution} · {outputFormat.toUpperCase()} · nano-banana-pro</p>
               </div>
-
-              {ctaType === 'keyword' && (
-                <div className="space-y-4 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-1">Кодовое слово *</label>
-                    <p className="text-xs text-slate-500 mb-2">Одно слово, которое пользователь отправит вам в сообщения</p>
-                    <input
-                      type="text"
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)}
-                      placeholder="ХОЧУ"
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 font-medium uppercase"
-                    />
-                    <p className="text-xs text-slate-400 mt-1.5">Примеры: СТАРТ, ХОЧУ, VIP, PDF</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-1">Что отправите в ответ? *</label>
-                    <p className="text-xs text-slate-500 mb-2">Опишите бонус: файл, ссылку, консультацию</p>
-                    <textarea
-                      value={ctaContent}
-                      onChange={(e) => setCtaContent(e.target.value)}
-                      placeholder="PDF с 5 шаблонами воронок, чек-лист по запуску..."
-                      rows={3}
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-slate-800 placeholder:text-slate-400 resize-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-100 flex items-center gap-2">
-                  <Info size={18} /> {error}
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={generating || !prompt.trim()}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:pointer-events-none text-white font-semibold shadow-md"
-              >
-                {generating ? 'Генерация...' : 'Сгенерировать карусель'}
-              </button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-center text-sm text-slate-500 hover:text-slate-700 py-2">
-                ← Назад к настройкам
-              </button>
-            </motion.div>
+            </motion.section>
           )}
         </AnimatePresence>
       </div>

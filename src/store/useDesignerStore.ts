@@ -6,10 +6,14 @@ export interface DesignerSession {
   title: string
   prompt: string
   selectedStyleId: string
-  scenario: string
-  ctaType: 'keyword' | 'auto'
-  keyword: string
-  ctaContent: string
+  genre: string
+  mood: string
+  lighting: string
+  cameraAngle: string
+  aspectRatio: '1:1' | '3:4' | '4:5' | '16:9' | '9:16'
+  resolution: '1K' | '2K' | '4K'
+  outputFormat: 'png' | 'jpg'
+  negativePrompt: string
   resultUrl: string | null
   createdAt: number
   updatedAt: number
@@ -30,10 +34,14 @@ const defaultSession = (): Omit<DesignerSession, 'id' | 'createdAt' | 'updatedAt
   title: 'Новая сессия',
   prompt: '',
   selectedStyleId: 'minimal',
-  scenario: 'sales',
-  ctaType: 'keyword',
-  keyword: 'ХОЧУ',
-  ctaContent: '',
+  genre: 'portrait',
+  mood: 'calm',
+  lighting: 'soft',
+  cameraAngle: 'eye-level',
+  aspectRatio: '4:5',
+  resolution: '2K',
+  outputFormat: 'png',
+  negativePrompt: '',
   resultUrl: null,
 })
 
@@ -53,10 +61,14 @@ export const useDesignerStore = create<DesignerState>()(
           title: data?.title ?? base.title,
           prompt: data?.prompt ?? base.prompt,
           selectedStyleId: data?.selectedStyleId ?? base.selectedStyleId,
-          scenario: data?.scenario ?? base.scenario,
-          ctaType: data?.ctaType ?? base.ctaType,
-          keyword: data?.keyword ?? base.keyword,
-          ctaContent: data?.ctaContent ?? base.ctaContent,
+          genre: data?.genre ?? base.genre,
+          mood: data?.mood ?? base.mood,
+          lighting: data?.lighting ?? base.lighting,
+          cameraAngle: data?.cameraAngle ?? base.cameraAngle,
+          aspectRatio: data?.aspectRatio ?? base.aspectRatio,
+          resolution: data?.resolution ?? base.resolution,
+          outputFormat: data?.outputFormat ?? base.outputFormat,
+          negativePrompt: data?.negativePrompt ?? base.negativePrompt,
           resultUrl: data?.resultUrl ?? base.resultUrl,
           createdAt: now,
           updatedAt: now,

@@ -14,16 +14,20 @@ import {
   MoreHorizontal,
 } from 'lucide-react'
 import { useQuizStore } from '../store/useQuizStore'
+import { useStore } from '../store/useStore'
+import { Toast } from '../components/Toast'
 
 const APP_NAME = 'AI Tools'
 
 export function QuizList() {
   const navigate = useNavigate()
   const { quizzes, addQuiz, deleteQuiz } = useQuizStore()
+  const { useToolCharge, getToolPrice, getToolFreeRemaining, planId, incrementGenerations } = useStore()
   const [filterAll] = useState(true)
   const [viewGrid, setViewGrid] = useState(true)
   const [search, setSearch] = useState('')
   const [menuQuizId, setMenuQuizId] = useState<string | null>(null)
+  const [toast, setToast] = useState({ visible: false, message: '' })
 
   const filtered = quizzes.filter(
     (q) =>
@@ -32,7 +36,15 @@ export function QuizList() {
   )
 
   const handleNewQuiz = () => {
+    if (!useToolCharge('quizmaster')) {
+      setToast({
+        visible: true,
+        message: `Недостаточно нейронов. Бесплатно: ${getToolFreeRemaining('quizmaster')} · далее ${getToolPrice('quizmaster')} ⚡`,
+      })
+      return
+    }
     const id = addQuiz()
+    incrementGenerations(1)
     navigate(`/quiz/${id}`)
   }
 
@@ -59,6 +71,9 @@ export function QuizList() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">НЕЙРОКВИЗ</h1>
             <p className="text-sm text-slate-500 mt-0.5">Создавайте квизы и собирайте заявки</p>
+            <p className="text-xs text-amber-700 mt-1">
+              План {planId.toUpperCase()} · Бесплатно сегодня: {getToolFreeRemaining('quizmaster')} · далее {getToolPrice('quizmaster')} ⚡
+            </p>
           </div>
           <button
             type="button"
@@ -218,6 +233,7 @@ export function QuizList() {
           </div>
         )}
       </div>
+      <Toast message={toast.message} visible={toast.visible} onClose={() => setToast({ visible: false, message: '' })} />
     </div>
   )
 }

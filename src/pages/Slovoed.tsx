@@ -61,8 +61,9 @@ function useVoiceInput(onResult: (text: string) => void) {
 }
 
 export function Slovoed() {
-  const { balance, useSlovoedCharge, slovoedFreeRemaining } = useStore()
-  const freeRemaining = slovoedFreeRemaining()
+  const { balance, useToolCharge, getToolFreeRemaining, getToolPrice, incrementGenerations, planId } = useStore()
+  const freeRemaining = getToolFreeRemaining('slovoed')
+  const toolPrice = getToolPrice('slovoed')
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<string | null>(null)
@@ -79,7 +80,7 @@ export function Slovoed() {
   const handleSubmit = async () => {
     const trimmed = input.trim()
     if (!trimmed || loading) return
-    if (!useSlovoedCharge()) {
+    if (!useToolCharge('slovoed')) {
       showToast('Недостаточно нейронов. Пополните баланс или дождитесь завтрашних бесплатных попыток.')
       return
     }
@@ -92,6 +93,7 @@ export function Slovoed() {
         return
       }
       setResult(text || '— Пустой ответ')
+      incrementGenerations(1)
     } finally {
       setLoading(false)
     }
@@ -180,6 +182,7 @@ export function Slovoed() {
             imageUrl={tool.characterImage}
             accentColor={tool.accentColor}
             name={tool.characterName}
+            toolId={tool.id}
             className="w-full h-full"
           />
         </div>
@@ -188,7 +191,7 @@ export function Slovoed() {
           Вставьте ссылку, прикрепите файл или запишите голос
         </p>
         <p className="text-center text-xs text-slate-500 mb-6">
-          3 бесплатные в день, далее 5 нейронов
+          План: {planId.toUpperCase()} · Бесплатно сегодня: {freeRemaining}, далее {toolPrice} нейронов за запрос
         </p>
 
         {/* Поле ввода */}

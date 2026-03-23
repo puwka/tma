@@ -83,7 +83,7 @@ function useVoiceInput(onResult: (text: string) => void) {
 }
 
 export function Coach() {
-  const { userName, userAvatar } = useStore()
+  const { userName, userAvatar, useToolCharge, getToolFreeRemaining, getToolPrice, planId, incrementGenerations } = useStore()
   const {
     sessions,
     currentSessionId,
@@ -125,6 +125,16 @@ export function Coach() {
       const trimmed = text.trim()
       if (!trimmed || loading) return
       if (!currentSessionId) return
+      if (!useToolCharge('coach')) {
+        const errMsg: SessionMessage = {
+          id: `e-${Date.now()}`,
+          role: 'assistant',
+          content: `Недостаточно нейронов. Бесплатные ответы сегодня закончились. Стоимость ответа: ${getToolPrice('coach')} нейронов.`,
+          timestamp: Date.now(),
+        }
+        appendMessage(currentSessionId, errMsg)
+        return
+      }
       setInput('')
       const userMsg: SessionMessage = {
         id: `u-${Date.now()}`,
@@ -148,6 +158,7 @@ export function Coach() {
           timestamp: Date.now(),
         }
         appendMessage(currentSessionId, assistantMsg)
+        incrementGenerations(1)
       } catch (e) {
         const errMsg: SessionMessage = {
           id: `e-${Date.now()}`,
@@ -160,7 +171,7 @@ export function Coach() {
         setLoading(false)
       }
     },
-    [loading, currentSessionId, messages, appendMessage]
+    [loading, currentSessionId, messages, appendMessage, useToolCharge, getToolPrice, incrementGenerations]
   )
 
   const send = () => sendMessage(input)
@@ -355,6 +366,9 @@ export function Coach() {
                 <h2 className="text-xl font-bold mt-0.5">Привет, {displayName}! 👋</h2>
                 <p className="text-teal-100/90 text-[14px] leading-relaxed mt-2">
                   Я помогу увидеть то, что пока не замечаешь, и найти свои ответы через вопросы и рефлексию.
+                </p>
+                <p className="text-teal-100/90 text-[12px] mt-2">
+                  План: {planId.toUpperCase()} · Бесплатно сегодня: {getToolFreeRemaining('coach')} · Далее {getToolPrice('coach')} нейронов
                 </p>
               </div>
               <div className="p-5">

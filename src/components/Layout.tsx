@@ -20,12 +20,22 @@ export function Layout() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-screen bg-white">
-      <main className="flex-1 overflow-auto pb-20">
+    <div className="flex flex-col h-full min-h-screen min-h-[100dvh] bg-white">
+      <main
+        className="flex-1 overflow-auto"
+        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
+      >
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-soft z-50 pb-[env(safe-area-inset-bottom)]">
+      <nav
+        className="fixed inset-x-0 bottom-0 bg-white/95 supports-[backdrop-filter]:bg-white/85 backdrop-blur-md border-t border-slate-200/80 shadow-soft z-50"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+        }}
+      >
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
           {tabs.map(({ id, path, label, icon: Icon }) => {
             const isActive = location.pathname === path || (path === '/' && location.pathname === '/')
